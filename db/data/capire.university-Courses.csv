@@ -1,0 +1,5 @@
+ID,title,description,credits,semester,professor_ID
+a1b2c3d4-e5f6-7890-abcd-ef1234567801,Introduction to Programming,Learn the fundamentals of programming using Python,6,Winter 2026,f1e2d3c4-a5b6-7890-abcd-ef1234567801
+a1b2c3d4-e5f6-7890-abcd-ef1234567802,Data Structures and Algorithms,Study of fundamental data structures and algorithm design,6,Winter 2026,f1e2d3c4-a5b6-7890-abcd-ef1234567801
+a1b2c3d4-e5f6-7890-abcd-ef1234567803,Linear Algebra,Vectors and matrices and linear transformations,5,Summer 2026,f1e2d3c4-a5b6-7890-abcd-ef1234567802
+a1b2c3d4-e5f6-7890-abcd-ef1234567804,Quantum Mechanics,Introduction to quantum theory and wave functions,6,Winter 2026,f1e2d3c4-a5b6-7890-abcd-ef1234567803

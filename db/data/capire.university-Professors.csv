@@ -1,0 +1,4 @@
+ID,firstName,lastName,email,department
+f1e2d3c4-a5b6-7890-abcd-ef1234567801,Alice,Smith,alice.smith@university.edu,Computer Science
+f1e2d3c4-a5b6-7890-abcd-ef1234567802,Bob,Johnson,bob.johnson@university.edu,Mathematics
+f1e2d3c4-a5b6-7890-abcd-ef1234567803,Clara,Williams,clara.williams@university.edu,Physics

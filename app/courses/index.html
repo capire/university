@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Courses</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; }
+    .app { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+    h1 { font-size: 1.6rem; margin-bottom: 1.5rem; color: #1a1a2e; }
+    .filters { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filters input, .filters select {
+      padding: 0.5rem 0.75rem; border: 1px solid #ddd; border-radius: 6px;
+      font-size: 0.9rem; background: #fff; outline: none;
+    }
+    .filters input:focus, .filters select:focus { border-color: #4a6cf7; }
+    .filters input { flex: 1; min-width: 200px; }
+
+    .course-card {
+      background: #fff; border-radius: 10px; padding: 1.25rem;
+      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      cursor: pointer; transition: box-shadow 0.2s;
+    }
+    .course-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .course-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .course-title { font-size: 1.1rem; font-weight: 600; color: #1a1a2e; }
+    .badge {
+      display: inline-block; padding: 0.2rem 0.6rem; border-radius: 12px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .badge-credits { background: #e8f0fe; color: #1967d2; }
+    .course-meta { margin-top: 0.5rem; font-size: 0.85rem; color: #666; display: flex; gap: 1.5rem; }
+
+    .detail-panel {
+      background: #fafbfc; border-top: 1px solid #eee;
+      margin-top: 1rem; padding-top: 1rem;
+    }
+    .detail-panel h3 { font-size: 0.85rem; text-transform: uppercase; color: #888; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .detail-panel p { font-size: 0.9rem; color: #555; margin-bottom: 1rem; line-height: 1.5; }
+
+    .enrollment-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .enrollment-table th {
+      text-align: left; padding: 0.5rem; border-bottom: 2px solid #eee;
+      color: #888; font-weight: 600; text-transform: uppercase; font-size: 0.75rem;
+    }
+    .enrollment-table td { padding: 0.5rem; border-bottom: 1px solid #f0f0f0; }
+    .status { padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+    .status-enrolled { background: #e6f4ea; color: #137333; }
+    .status-completed { background: #e8f0fe; color: #1967d2; }
+    .status-dropped { background: #fce8e6; color: #c5221f; }
+
+    .empty { text-align: center; padding: 3rem; color: #999; }
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <h1>{{ t.AppTitle }}</h1>
+
+    <div class="filters">
+      <input v-model="search" :placeholder="t.SearchPlaceholder" />
+      <select v-model="semesterFilter">
+        <option value="">{{ t.AllSemesters }}</option>
+        <option v-for="s in semesters" :key="s" :value="s">{{ s }}</option>
+      </select>
+      <select v-model="locale" @change="switchLocale">
+        <option v-for="l in locales" :key="l.code" :value="l.code">{{ l.label }}</option>
+      </select>
+    </div>
+
+    <div v-if="filteredCourses.length === 0" class="empty">{{ t.NoCourses }}</div>
+
+    <div
+      v-for="course in filteredCourses" :key="course.ID"
+      class="course-card"
+      @click="toggle(course.ID)"
+    >
+      <div class="course-header">
+        <span class="course-title">{{ course.title }}</span>
+        <span class="badge badge-credits">{{ course.credits }} {{ t.Credits }}</span>
+      </div>
+      <div class="course-meta">
+        <span>{{ course.semester }}</span>
+        <span v-if="course.professor">{{ t.Professor }}: {{ course.professor.firstName }} {{ course.professor.lastName }}</span>
+        <span>{{ course.enrollments.length }} {{ course.enrollments.length !== 1 ? t.Students : t.Student }}</span>
+      </div>
+
+      <div v-if="expanded === course.ID" class="detail-panel">
+        <div v-if="course.description">
+          <h3>{{ t.Description }}</h3>
+          <p>{{ course.description }}</p>
+        </div>
+        <h3>{{ t.Enrollments }}</h3>
+        <table v-if="course.enrollments.length" class="enrollment-table">
+          <thead><tr><th>{{ t.Student }}</th><th>{{ t.Status }}</th><th>{{ t.Grade }}</th></tr></thead>
+          <tbody>
+            <tr v-for="e in course.enrollments" :key="e.ID">
+              <td>{{ e.student.firstName }} {{ e.student.lastName }}</td>
+              <td><span class="status" :class="'status-' + e.status">{{ statusLabel(e.status) }}</span></td>
+              <td>{{ e.grade || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-else style="color:#999">{{ t.NoEnrollments }}</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue
+
+    const supportedLocales = ['en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'zh']
+
+    function parseProperties(text) {
+      const props = {}
+      for (const line of text.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith('#')) continue
+        const idx = trimmed.indexOf('=')
+        if (idx > 0) props[trimmed.substring(0, idx).trim()] = trimmed.substring(idx + 1)
+              .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+      }
+      return props
+    }
+
+    async function loadBundle(lang) {
+      const suffix = lang === 'en' ? '' : '_' + lang
+      try {
+        const res = await fetch('../i18n/i18n' + suffix + '.properties')
+        if (!res.ok) throw new Error()
+        return parseProperties(await res.text())
+      } catch {
+        return lang !== 'en' ? loadBundle('en') : {}
+      }
+    }
+
+    createApp({
+      setup() {
+        const courses = ref([])
+        const search = ref('')
+        const semesterFilter = ref('')
+        const expanded = ref(null)
+        const translations = ref({})
+        const browserLang = navigator.language.split('-')[0]
+        const locale = ref(supportedLocales.includes(browserLang) ? browserLang : 'en')
+        const locales = [
+          { code: 'en', label: 'English' }, { code: 'de', label: 'Deutsch' },
+          { code: 'fr', label: 'Fran\u00e7ais' }, { code: 'es', label: 'Espa\u00f1ol' },
+          { code: 'it', label: 'Italiano' }, { code: 'pt', label: 'Portugu\u00eas' },
+          { code: 'ja', label: '\u65e5\u672c\u8a9e' }, { code: 'zh', label: '\u4e2d\u6587' }
+        ]
+
+        const t = computed(() => translations.value)
+
+        function statusLabel(status) {
+          const key = 'Status' + status.charAt(0).toUpperCase() + status.slice(1)
+          return translations.value[key] || status
+        }
+
+        const semesters = computed(() =>
+          [...new Set(courses.value.map(c => c.semester))].sort()
+        )
+
+        const filteredCourses = computed(() =>
+          courses.value.filter(c => {
+            const q = search.value.toLowerCase()
+            const matchesSearch = !q || c.title.toLowerCase().includes(q)
+              || (c.professor && (c.professor.firstName + ' ' + c.professor.lastName).toLowerCase().includes(q))
+            const matchesSemester = !semesterFilter.value || c.semester === semesterFilter.value
+            return matchesSearch && matchesSemester
+          })
+        )
+
+        function toggle(id) {
+          expanded.value = expanded.value === id ? null : id
+        }
+
+        async function switchLocale() {
+          document.documentElement.lang = locale.value
+          translations.value = await loadBundle(locale.value)
+        }
+
+        onMounted(async () => {
+          translations.value = await loadBundle(locale.value)
+
+          const url = '/odata/v4/course/Courses'
+            + '?$expand=professor($select=firstName,lastName)'
+            + ',enrollments($select=status,grade;$expand=student($select=firstName,lastName))'
+          const res = await fetch(url)
+          const data = await res.json()
+          courses.value = data.value
+        })
+
+        return { courses, search, semesterFilter, semesters, filteredCourses, expanded, toggle, t, locale, locales, switchLocale, statusLabel }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
