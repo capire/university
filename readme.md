@@ -1,6 +1,6 @@
 # @capire/university
 
-This is a result of a ad-hoc incremental 'vibe coding' exercise done in a hand-on session recently. 
+This is a result of a short ~30 min ad-hoc incremental 'vibe coding' exercise done in a hand-on session recently. 
 
 The prompts were like that: 
 
