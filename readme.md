@@ -17,7 +17,7 @@ The prompts were like that:
 
 ## Try it
 
-Assumed you're setup for local CAP development:
+Assumed you're [setup for local CAP development](https://cap.cloud.sap/docs/get-started/):
 
 ```sh
 git clone https://github.com/capire/university
