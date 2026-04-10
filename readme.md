@@ -1,22 +1,27 @@
-# Getting Started
+# @capire/university
 
-Welcome to your new CAP project.
+This is a result of a ad-hoc incremental 'vibe coding' exercise done in a hand-on session recently. 
 
-It contains these folders and files, following our recommended project layout:
+The prompts were like that: 
 
-File or Folder | Purpose
----------|----------
-`app/` | content for UI frontends goes here
-`db/` | your domain models and data go here
-`srv/` | your service models and code go here
-`readme.md` | this getting started guide
+1. _Add a domain model for university courses_
+2. _Add test data_
+3. _Add a service for admins_
+4. _Add constraints_
+5. _Add i18n_
+6. _Add a vue.js UI_
+7. _Add i18n also to the UI_
 
-## Next Steps
+( Plus a few tweaks and corrections here and there ;)
 
-- Open a new terminal and run `cds watch`
-- (in VS Code simply choose _**Terminal** > Run Task > cds watch_)
-- Start with your domain model, in a CDS file in `db/`
 
-## Learn More
+## Try it
 
-Learn more at <https://cap.cloud.sap>.
+Assumed you're setup for local CAP development:
+
+```sh
+git clone https://github.com/capire/university
+cds watch university
+open http://localhost:4004/courses/index.html
+```
+
