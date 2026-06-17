@@ -15,7 +15,7 @@ The prompts were like that:
 ( Plus a few tweaks and corrections here and there ;)
 
 
-## Try it
+## Run it
 
 Assumed you're [setup for local CAP development](https://cap.cloud.sap/docs/get-started/):
 
